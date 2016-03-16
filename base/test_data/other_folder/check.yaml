@@ -1,0 +1,3 @@
+description: some_table empty
+query: SELECT id, some_col FROM some_table
+assert: absent
