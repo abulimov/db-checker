@@ -1,3 +1,4 @@
+// Package base contains nearly all types and functions for db-checker
 package base
 
 import (
@@ -6,9 +7,6 @@ import (
 	"os"
 	"strings"
 )
-
-// PGTime is format used by Postgres to represent date time
-const PGTime = "2006-01-02 15:04:05.999999-07"
 
 // Error is our error log
 var Error = log.New(os.Stderr,

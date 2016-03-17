@@ -140,8 +140,8 @@ func GetChecks(searchDir string) ([]*Check, error) {
 }
 
 // RunChecks runs all check, uses dbConnString for db connection
-func RunChecks(dbConnString string, checks []*Check, concurrency int) ([]CheckResult, error) {
-	db, err := sql.Open("postgres", dbConnString)
+func RunChecks(dbType, dbConnString string, checks []*Check, concurrency int) ([]CheckResult, error) {
+	db, err := sql.Open(dbType, dbConnString)
 	if err != nil {
 		return nil, err
 	}

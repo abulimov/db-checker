@@ -1,0 +1,3 @@
+query: SHOW PROCESSLIST
+description: always fails
+assert: absent

@@ -6,7 +6,7 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
-// DiffRows calculates diff between slices of Row
+// DiffRows calculates diff (in form of slice of Row) between two slices of Row
 func DiffRows(first, second []Row) []Row {
 	var add []Row
 	m := make(map[string]int)
@@ -30,7 +30,7 @@ func DiffRows(first, second []Row) []Row {
 	return add
 }
 
-// DiffResults return diff between two results slices
+// DiffResults returns diff (in form of slice of CheckResult) between two slices of CheckResult
 func DiffResults(first, second []CheckResult) []CheckResult {
 	var add []CheckResult
 
@@ -53,7 +53,7 @@ func DiffResults(first, second []CheckResult) []CheckResult {
 	return add
 }
 
-// DiffPretty returns pretty diff between two strings
+// DiffPretty returns string with pretty diff between two strings
 func DiffPretty(a, b string) string {
 	dmp := diffmatchpatch.New()
 	diffs := dmp.DiffMain(a, b, true)

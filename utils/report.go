@@ -1,3 +1,4 @@
+// Package utils contains all functions to read/write/generate reports for db-checker
 package utils
 
 import (
@@ -45,7 +46,7 @@ func ReportProblems(results []base.CheckResult) (int, string) {
 		report += buffer.String()
 	}
 	if count == 0 {
-		return count, "Проблем не обнаружено"
+		return count, "No problems found"
 	}
 	return count, report
 }
@@ -96,7 +97,7 @@ func ReadReport(f io.Reader) ([]base.CheckResult, error) {
 	return report, nil
 }
 
-// DiffResults return diff between two results slices
+// DiffResults return diff (in form of []base.CheckResult) between two []base.CheckResult slices
 func DiffResults(first, second []base.CheckResult) []base.CheckResult {
 	var add []base.CheckResult
 

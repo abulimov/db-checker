@@ -2,12 +2,12 @@
 
 # db-checker
 
-Utility to run queries on Postgres database, and alert on some assertions against
+Utility to run queries on PostgreSQL/MySQL database, and alert on some assertions against
 query result.
 
 For example, one can check if query returns data, or query does not return data.
 
-## Build
+## Installation
 
 Tested against Go 1.5+
 
@@ -18,6 +18,10 @@ On Linux/OSX:
 export GOPATH=~/go && mkdir -p ~/go
 go get github.com/abulimov/db-checker
 ```
+
+Now you have *db-checker* binary.
+
+### Cross-platform build
 
 Compiling Linux binary from OSX:
 
@@ -77,6 +81,8 @@ description: Locks in database
 assert: absent
 ```
 
+More examples in **examples** directory.
+
 ## Usage
 
 This utility is a Nagios-compatible plugin.
@@ -85,13 +91,13 @@ You must at least specify credentials to access the database and a directory
 to get checks from.
 
 ```console
-nagios@example.com:~$ ./db-checker --dbname stupid --user=checker --host=localhost --password=SomePassword --checks-dir /opt/checks/stupid
+nagios@example.com:~$ ./db-checker --dbname stupid --dbuser=checker --dbhost=localhost --dbpassword=SomePassword --checks /opt/checks/stupid
 WARNING:
 * Stupid check
 No results found
  | problems=1;0;0;0;0
 
-nagios@example.com:~$ ./db-checker --dbname movies --user=checker --host=localhost --password=SomePassword --checks-dir /opt/checks/movies --critical
+nagios@example.com:~$ ./db-checker --dbname movies --dbuser=checker --dbhost=localhost --dbpassword=SomePassword --checks /opt/checks/movies --critical
 CRITICAL:
 * Found movies with zero duration
 N. ¦ column1 ¦ orig_title                ¦ rus_title

@@ -1,6 +1,6 @@
 package base
 
-// eqRow check if two rows are equal, order of elements matters
+// eqRow check if two Rows are equal, order of elements matters
 func eqRow(first, second Row) bool {
 	if len(first) != len(second) {
 		return false
@@ -13,7 +13,7 @@ func eqRow(first, second Row) bool {
 	return true
 }
 
-// eqRows check if two []rows are equal, order of elements matters
+// eqRows check if two []Rows are equal, order of elements matters
 func eqRows(first, second []Row) bool {
 	if len(first) != len(second) {
 		return false
@@ -26,18 +26,7 @@ func eqRows(first, second []Row) bool {
 	return true
 }
 
-func eqString(a, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for _, sa := range a {
-		if !StringInSlice(sa, b) {
-			return false
-		}
-	}
-	return true
-}
-
+// eqResult checks if tow CheckResults are equal
 func eqResult(a, b CheckResult) bool {
 	if a.Check != b.Check {
 		return false
