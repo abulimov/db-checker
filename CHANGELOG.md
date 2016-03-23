@@ -1,3 +1,8 @@
+## v0.2.1 [2016-03-23]
+
+- Make report file generation atomic
+- Simplified main function
+
 ## v0.2.0 [2016-03-17]
 
 - Added MySQL support

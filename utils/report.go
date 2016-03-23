@@ -53,13 +53,23 @@ func ReportProblems(results []base.CheckResult) (int, string) {
 
 // WriteReportFile writes report to file at filePath.
 func WriteReportFile(results []base.CheckResult, filePath string) error {
-	f, err := os.Create(filePath)
+	tmpfile, err := ioutil.TempFile("", "db-checker")
 	if err != nil {
-		base.Error.Println(err)
 		return err
 	}
-	defer f.Close()
-	return WriteReport(results, f)
+
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	if err = WriteReport(results, tmpfile); err != nil {
+		return err
+	}
+	if err = tmpfile.Close(); err != nil {
+		return err
+	}
+	if err = os.Rename(tmpfile.Name(), filePath); err != nil {
+		return err
+	}
+	return nil
 
 }
 

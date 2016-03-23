@@ -18,7 +18,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var version = "0.2.0"
+var version = "0.2.1"
 
 // set up cli vars
 var argDBType = flag.String("dbtype", "postgres", "Type of DB, can be 'postgres' or 'mysql'")
@@ -35,34 +35,72 @@ var argChecksDir = flag.String("checks", "", "Path to directory with checks")
 var argConcurrentChecks = flag.Int("concurrent-checks", 5, "Limit concurrent executions of checks")
 var versionFlag = flag.Bool("version", false, "print db-checker version and exit")
 
-func main() {
-	check := nagiosplugin.NewCheck()
-	// If we exit early or panic() we'll still output a result.
-	defer check.Finish()
+const (
+	postgres = "postgres"
+	mysql    = "mysql"
+)
 
-	flag.Parse()
+// connString constucts dbConnString
+func connString(dbType, dbUser, dbPassword, dbHost string, dbPort int, dbName, dbParams string) string {
+	var dbConnString string
+	switch dbType {
+	case postgres:
+		// postgres://username:password@address:port/dbname?param=value
+		dbConnString = fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
+			dbUser, dbPassword, dbHost, dbPort, dbName)
+	case mysql:
+		// username:password@protocol(address:port)/dbname?param=value
+		dbConnString = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+			dbUser, dbPassword, dbHost, dbPort, dbName)
+	}
 
+	if dbParams != "" {
+		dbConnString += fmt.Sprintf("?%s", dbParams)
+	}
+	return dbConnString
+}
+
+func getDBPassword(dbPassword string) string {
+	if dbPassword == "" {
+		switch *argDBType {
+		case postgres:
+			if os.Getenv("PGPASSWORD") != "" {
+				return os.Getenv("PGPASSWORD")
+			}
+		case mysql:
+			if os.Getenv("MYSQL_PWD") != "" {
+				return os.Getenv("MYSQL_PWD")
+			}
+		}
+	}
+	return dbPassword
+}
+
+func filterResults(diff bool, reportFile string, results []base.CheckResult) []base.CheckResult {
+	filteredResults := results
+	// if it is diff check
+	if diff {
+		// try to read old report
+		oldResults, err := utils.ReadReportFile(reportFile)
+		if err != nil {
+			base.Error.Printf("Failed to read report file %s: %s\n, assuming first check, all problems are new",
+				reportFile, err)
+		} else {
+			// calculate diff
+			filteredResults = utils.DiffResults(oldResults, results)
+		}
+	}
+	return filteredResults
+}
+
+func checkArgs(check *nagiosplugin.Check) {
 	if *versionFlag {
 		fmt.Printf("db-checker version %s\n", version)
 		os.Exit(0)
 	}
 
-	if *argDBType != "mysql" && *argDBType != "postgres" {
+	if *argDBType != mysql && *argDBType != postgres {
 		check.Unknownf("Not valid db type %s!\n, use 'postgres' or 'mysql'", *argDBType)
-	}
-
-	dbPassword := *argDBPassword
-	if dbPassword == "" {
-		switch *argDBType {
-		case "postgres":
-			if os.Getenv("PGPASSWORD") != "" {
-				dbPassword = os.Getenv("PGPASSWORD")
-			}
-		case "mysql":
-			if os.Getenv("MYSQL_PWD") != "" {
-				dbPassword = os.Getenv("MYSQL_PWD")
-			}
-		}
 	}
 
 	if *argChecksDir == "" {
@@ -73,51 +111,9 @@ func main() {
 	if *argDiff && *argReport == "" {
 		check.Unknownf("Diff check could only be performed when report is specified")
 	}
+}
 
-	// choose what checks we should execute
-	checks, err := base.GetChecks(*argChecksDir)
-	if err != nil {
-		check.Unknownf("%s", err)
-	}
-	// set up default report file
-	reportFile := *argReport
-
-	// format dbConnString
-	var dbConnString string
-	switch *argDBType {
-	case "postgres":
-		// postgres://username:password@address:port/dbname?param=value
-		dbConnString = fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-			*argDBUser, dbPassword, *argDBHost, *argDBPort, *argDBName)
-	case "mysql":
-		// username:password@protocol(address:port)/dbname?param=value
-		dbConnString = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
-			*argDBUser, dbPassword, *argDBHost, *argDBPort, *argDBName)
-	}
-
-	if *argDBParams != "" {
-		dbConnString += fmt.Sprintf("?%s", *argDBParams)
-	}
-
-	results, err := base.RunChecks(*argDBType, dbConnString, checks, *argConcurrentChecks)
-	if err != nil {
-		check.Unknownf("%s", err.Error())
-	}
-
-	filteredResults := results
-	// if it is diff check
-	if *argDiff {
-		// try to read old report
-		oldResults, err := utils.ReadReportFile(reportFile)
-		if err != nil {
-			base.Error.Printf("Failed to read report file %s: %s\n, assuming first check, all problems are new",
-				reportFile, err)
-		}
-		// calculate diff
-		filteredResults = utils.DiffResults(oldResults, results)
-	}
-	problemsCount, report := utils.ReportProblems(filteredResults)
-
+func processResults(check *nagiosplugin.Check, problemsCount int, report string) {
 	// Add some perfdata (label, unit, value, min, max, warn, crit).
 	// The math.Inf(1) will be parsed as 'no maximum'.
 	check.AddPerfDatum("problems", "", float64(problemsCount), 0.0, float64(0),
@@ -134,7 +130,9 @@ func main() {
 		}
 
 	}
+}
 
+func writeReport(reportFile string, results []base.CheckResult) {
 	// write report
 	if reportFile != "" {
 		err := utils.WriteReportFile(results, reportFile)
@@ -142,4 +140,45 @@ func main() {
 			base.Error.Printf("Failed to generate report: %v\n", err)
 		}
 	}
+}
+
+func main() {
+	check := nagiosplugin.NewCheck()
+	// If we exit early or panic() we'll still output a result.
+	defer check.Finish()
+
+	flag.Parse()
+
+	// check if all necessary args are passed via cli
+	checkArgs(check)
+
+	// get dbpassword from ENV if possible
+	dbPassword := getDBPassword(*argDBPassword)
+
+	// choose what checks we should execute
+	checks, err := base.GetChecks(*argChecksDir)
+	if err != nil {
+		check.Unknownf("%s", err)
+	}
+
+	// actual connection string
+	dbConnString := connString(*argDBType, *argDBUser, dbPassword, *argDBHost, *argDBPort, *argDBName, *argDBParams)
+
+	// list of base.CheckResults after all checks has been run
+	results, err := base.RunChecks(*argDBType, dbConnString, checks, *argConcurrentChecks)
+	if err != nil {
+		check.Unknownf("%s", err.Error())
+	}
+
+	// filter already known results from old report if appropriate
+	filteredResults := filterResults(*argDiff, *argReport, results)
+
+	// create nice report and count problems
+	problemsCount, report := utils.ReportProblems(filteredResults)
+
+	// set check status based on report data
+	processResults(check, problemsCount, report)
+
+	// write new report file if appropriate
+	writeReport(*argReport, results)
 }

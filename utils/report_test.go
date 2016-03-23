@@ -8,43 +8,46 @@ import (
 	"github.com/abulimov/db-checker/base"
 )
 
-func TestReportProblems(t *testing.T) {
-	t1 := "2015-08-10 11:42:50.641621+03"
-	results := []base.CheckResult{
-		{
-			Check: base.Check{
-				Description: "Mismatch between tbl_one и tbl_two",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Columns: base.Row{"ID", "F", "S"},
-			Problems: []base.Row{
-				{"181620", "4", "15"},
-				{"236695", "2", "30"},
-			},
+var t1 = "2015-08-10 11:42:50.641621+03"
+var exampleContent = `[{"check":{"Description":"Mismatch between tbl_one and tbl_two","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["181620","4","15"],["236695","2","30"]],"columns":["ID","F","S"]},{"check":{"Description":"Other check","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["181620","-200","2015-08-10 11:42:50.641621+03"]],"columns":["user_id","balance","date"]},{"check":{"Description":"Another check","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["Warner Bros. Entertainment, Inc.","Interview with the Vampire: The Vampire Chronicles","vampire","2015-08-10 11:42:50.641621+03"],["Sony Pictures","Repentance","some-slug","2015-08-10 11:42:50.641621+03"]],"columns":["rightsholder","title","slug","date"]}]`
+var exampleCheckResults = []base.CheckResult{
+	{
+		Check: base.Check{
+			Description: "Mismatch between tbl_one and tbl_two",
+			Query:       "SELECT * FROM tbl;",
 		},
-		{
-			Check: base.Check{
-				Description: "Other check",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Columns: base.Row{"user_id", "balance", "date"},
-			Problems: []base.Row{
-				{"181620", "-200", t1},
-			},
+		Columns: base.Row{"ID", "F", "S"},
+		Problems: []base.Row{
+			{"181620", "4", "15"},
+			{"236695", "2", "30"},
 		},
-		{
+	},
+	{
+		Check: base.Check{
+			Description: "Other check",
+			Query:       "SELECT * FROM tbl;",
+		},
+		Columns: base.Row{"user_id", "balance", "date"},
+		Problems: []base.Row{
+			{"181620", "-200", t1},
+		},
+	},
+	{
 
-			Check: base.Check{
-				Description: "Another check",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Columns: base.Row{"rightsholder", "title", "slug", "date"},
-			Problems: []base.Row{
-				{"Warner Bros. Entertainment, Inc.", "Interview with the Vampire: The Vampire Chronicles", "vampire", t1},
-				{"Sony Pictures", "Repentance", "some-slug", t1},
-			},
+		Check: base.Check{
+			Description: "Another check",
+			Query:       "SELECT * FROM tbl;",
 		},
-	}
+		Columns: base.Row{"rightsholder", "title", "slug", "date"},
+		Problems: []base.Row{
+			{"Warner Bros. Entertainment, Inc.", "Interview with the Vampire: The Vampire Chronicles", "vampire", t1},
+			{"Sony Pictures", "Repentance", "some-slug", t1},
+		},
+	},
+}
+
+func TestReportProblems(t *testing.T) {
+	results := exampleCheckResults
 	gotCount, gotReport := ReportProblems(results)
 	expectedCount := 5
 	if gotCount != expectedCount {
@@ -52,7 +55,7 @@ func TestReportProblems(t *testing.T) {
 	}
 
 	expectedReport := `
-* Mismatch between tbl_one и tbl_two
+* Mismatch between tbl_one and tbl_two
 N. ¦ ID     ¦ F ¦ S
 1. ¦ 181620 ¦ 4 ¦ 15
 2. ¦ 236695 ¦ 2 ¦ 30
@@ -76,40 +79,8 @@ N. ¦ rightsholder                     ¦ title                                 
 }
 
 func TestWriteReport(t *testing.T) {
-	t1 := "2015-08-10 11:42:50.641621+03"
-	results := []base.CheckResult{
-		{
-			Check: base.Check{
-				Description: "Mismatch between tbl_one и tbl_two",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Problems: []base.Row{
-				{"181620", "4", "15"},
-				{"236695", "2", "30"},
-			},
-		},
-		{
-			Check: base.Check{
-				Description: "Other check",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Problems: []base.Row{
-				{"181620", "-200", t1},
-			},
-		},
-		{
-
-			Check: base.Check{
-				Description: "Another check",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Problems: []base.Row{
-				{"Warner Bros. Entertainment, Inc.", "Interview with the Vampire: The Vampire Chronicles", "vampire", t1},
-				{"Sony Pictures", "Repentance", "some-slug", t1},
-			},
-		},
-	}
-	expectedContent := `[{"check":{"Description":"Mismatch between tbl_one и tbl_two","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["181620","4","15"],["236695","2","30"]],"columns":null},{"check":{"Description":"Other check","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["181620","-200","2015-08-10 11:42:50.641621+03"]],"columns":null},{"check":{"Description":"Another check","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["Warner Bros. Entertainment, Inc.","Interview with the Vampire: The Vampire Chronicles","vampire","2015-08-10 11:42:50.641621+03"],["Sony Pictures","Repentance","some-slug","2015-08-10 11:42:50.641621+03"]],"columns":null}]`
+	results := exampleCheckResults
+	expectedContent := exampleContent
 	var gotBytes bytes.Buffer
 	err := WriteReport(results, &gotBytes)
 	if err != nil {
@@ -125,40 +96,8 @@ func TestWriteReport(t *testing.T) {
 }
 
 func TestReadReport(t *testing.T) {
-	t1 := "2015-08-10 11:42:50.641621+03"
-	expectedResults := []base.CheckResult{
-		{
-			Check: base.Check{
-				Description: "Mismatch between tbl_one и tbl_two",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Problems: []base.Row{
-				{"181620", "4", "15"},
-				{"236695", "2", "30"},
-			},
-		},
-		{
-			Check: base.Check{
-				Description: "Other check",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Problems: []base.Row{
-				{"181620", "-200", t1},
-			},
-		},
-		{
-
-			Check: base.Check{
-				Description: "Another check",
-				Query:       "SELECT * FROM tbl;",
-			},
-			Problems: []base.Row{
-				{"Warner Bros. Entertainment, Inc.", "Interview with the Vampire: The Vampire Chronicles", "vampire", t1},
-				{"Sony Pictures", "Repentance", "some-slug", t1},
-			},
-		},
-	}
-	content := `[{"check":{"Description":"Mismatch between tbl_one и tbl_two","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["181620","4","15"],["236695","2","30"]],"columns":null},{"check":{"Description":"Other check","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["181620","-200","2015-08-10 11:42:50.641621+03"]],"columns":null},{"check":{"Description":"Another check","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["Warner Bros. Entertainment, Inc.","Interview with the Vampire: The Vampire Chronicles","vampire","2015-08-10 11:42:50.641621+03"],["Sony Pictures","Repentance","some-slug","2015-08-10 11:42:50.641621+03"]],"columns":null}]`
+	expectedResults := exampleCheckResults
+	content := exampleContent
 	gotResults, err := ReadReport(strings.NewReader(content))
 	if err != nil {
 		t.Fatalf("Got error %v on reading report", err)
