@@ -1,3 +1,7 @@
+## v0.2.2 [2016-03-23]
+
+- Simplified project structure
+
 ## v0.2.1 [2016-03-23]
 
 - Make report file generation atomic

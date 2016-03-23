@@ -1,5 +1,5 @@
-// Package base contains nearly all types and functions for db-checker
-package base
+// Package lib contains all types and functions for db-checker
+package lib
 
 import (
 	"fmt"

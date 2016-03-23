@@ -1,45 +1,43 @@
-package utils
+package lib
 
 import (
 	"bytes"
 	"strings"
 	"testing"
-
-	"github.com/abulimov/db-checker/base"
 )
 
 var t1 = "2015-08-10 11:42:50.641621+03"
 var exampleContent = `[{"check":{"Description":"Mismatch between tbl_one and tbl_two","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["181620","4","15"],["236695","2","30"]],"columns":["ID","F","S"]},{"check":{"Description":"Other check","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["181620","-200","2015-08-10 11:42:50.641621+03"]],"columns":["user_id","balance","date"]},{"check":{"Description":"Another check","Query":"SELECT * FROM tbl;","Assert":""},"problems":[["Warner Bros. Entertainment, Inc.","Interview with the Vampire: The Vampire Chronicles","vampire","2015-08-10 11:42:50.641621+03"],["Sony Pictures","Repentance","some-slug","2015-08-10 11:42:50.641621+03"]],"columns":["rightsholder","title","slug","date"]}]`
-var exampleCheckResults = []base.CheckResult{
+var exampleCheckResults = []CheckResult{
 	{
-		Check: base.Check{
+		Check: Check{
 			Description: "Mismatch between tbl_one and tbl_two",
 			Query:       "SELECT * FROM tbl;",
 		},
-		Columns: base.Row{"ID", "F", "S"},
-		Problems: []base.Row{
+		Columns: Row{"ID", "F", "S"},
+		Problems: []Row{
 			{"181620", "4", "15"},
 			{"236695", "2", "30"},
 		},
 	},
 	{
-		Check: base.Check{
+		Check: Check{
 			Description: "Other check",
 			Query:       "SELECT * FROM tbl;",
 		},
-		Columns: base.Row{"user_id", "balance", "date"},
-		Problems: []base.Row{
+		Columns: Row{"user_id", "balance", "date"},
+		Problems: []Row{
 			{"181620", "-200", t1},
 		},
 	},
 	{
 
-		Check: base.Check{
+		Check: Check{
 			Description: "Another check",
 			Query:       "SELECT * FROM tbl;",
 		},
-		Columns: base.Row{"rightsholder", "title", "slug", "date"},
-		Problems: []base.Row{
+		Columns: Row{"rightsholder", "title", "slug", "date"},
+		Problems: []Row{
 			{"Warner Bros. Entertainment, Inc.", "Interview with the Vampire: The Vampire Chronicles", "vampire", t1},
 			{"Sony Pictures", "Repentance", "some-slug", t1},
 		},
@@ -73,7 +71,7 @@ N. ¦ rightsholder                     ¦ title                                 
 	if gotReport != expectedReport {
 		t.Errorf(
 			"Diff between actual and expected reports:\n'%v'",
-			base.DiffPretty(gotReport, expectedReport),
+			DiffPretty(gotReport, expectedReport),
 		)
 	}
 }
@@ -90,7 +88,7 @@ func TestWriteReport(t *testing.T) {
 	if expectedContent != gotContent {
 		t.Errorf(
 			"Diff between actual and expected reports:\n'%v'",
-			base.DiffPretty(gotContent, expectedContent),
+			DiffPretty(gotContent, expectedContent),
 		)
 	}
 }
@@ -108,7 +106,7 @@ func TestReadReport(t *testing.T) {
 		t.Errorf("Got results len %v not equal to expected %v", gotLen, expectedLen)
 	}
 	for _, p := range gotResults {
-		if !base.ResultInSlice(p, expectedResults) {
+		if !ResultInSlice(p, expectedResults) {
 			t.Errorf("Result %v not found in expected results", p)
 		}
 	}

@@ -9,16 +9,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/abulimov/db-checker/utils"
-
-	"github.com/abulimov/db-checker/base"
+	"github.com/abulimov/db-checker/lib"
 
 	"github.com/fractalcat/nagiosplugin"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 )
 
-var version = "0.2.1"
+var version = "0.2.2"
 
 // set up cli vars
 var argDBType = flag.String("dbtype", "postgres", "Type of DB, can be 'postgres' or 'mysql'")
@@ -76,18 +74,18 @@ func getDBPassword(dbPassword string) string {
 	return dbPassword
 }
 
-func filterResults(diff bool, reportFile string, results []base.CheckResult) []base.CheckResult {
+func filterResults(diff bool, reportFile string, results []lib.CheckResult) []lib.CheckResult {
 	filteredResults := results
 	// if it is diff check
 	if diff {
 		// try to read old report
-		oldResults, err := utils.ReadReportFile(reportFile)
+		oldResults, err := lib.ReadReportFile(reportFile)
 		if err != nil {
-			base.Error.Printf("Failed to read report file %s: %s\n, assuming first check, all problems are new",
+			lib.Error.Printf("Failed to read report file %s: %s\n, assuming first check, all problems are new",
 				reportFile, err)
 		} else {
 			// calculate diff
-			filteredResults = utils.DiffResults(oldResults, results)
+			filteredResults = lib.DiffResults(oldResults, results)
 		}
 	}
 	return filteredResults
@@ -132,12 +130,12 @@ func processResults(check *nagiosplugin.Check, problemsCount int, report string)
 	}
 }
 
-func writeReport(reportFile string, results []base.CheckResult) {
+func writeReport(reportFile string, results []lib.CheckResult) {
 	// write report
 	if reportFile != "" {
-		err := utils.WriteReportFile(results, reportFile)
+		err := lib.WriteReportFile(results, reportFile)
 		if err != nil {
-			base.Error.Printf("Failed to generate report: %v\n", err)
+			lib.Error.Printf("Failed to generate report: %v\n", err)
 		}
 	}
 }
@@ -156,7 +154,7 @@ func main() {
 	dbPassword := getDBPassword(*argDBPassword)
 
 	// choose what checks we should execute
-	checks, err := base.GetChecks(*argChecksDir)
+	checks, err := lib.GetChecks(*argChecksDir)
 	if err != nil {
 		check.Unknownf("%s", err)
 	}
@@ -164,8 +162,8 @@ func main() {
 	// actual connection string
 	dbConnString := connString(*argDBType, *argDBUser, dbPassword, *argDBHost, *argDBPort, *argDBName, *argDBParams)
 
-	// list of base.CheckResults after all checks has been run
-	results, err := base.RunChecks(*argDBType, dbConnString, checks, *argConcurrentChecks)
+	// list of lib.CheckResults after all checks has been run
+	results, err := lib.RunChecks(*argDBType, dbConnString, checks, *argConcurrentChecks)
 	if err != nil {
 		check.Unknownf("%s", err.Error())
 	}
@@ -174,7 +172,7 @@ func main() {
 	filteredResults := filterResults(*argDiff, *argReport, results)
 
 	// create nice report and count problems
-	problemsCount, report := utils.ReportProblems(filteredResults)
+	problemsCount, report := lib.ReportProblems(filteredResults)
 
 	// set check status based on report data
 	processResults(check, problemsCount, report)

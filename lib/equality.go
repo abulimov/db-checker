@@ -1,4 +1,4 @@
-package base
+package lib
 
 // eqRow check if two Rows are equal, order of elements matters
 func eqRow(first, second Row) bool {
