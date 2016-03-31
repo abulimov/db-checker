@@ -4,3 +4,15 @@ go:
   - 1.5
   - 1.6
   - tip
+
+before_install:
+  - export GO15VENDOREXPERIMENT=1
+
+install:
+  - echo 'nop'
+
+script:
+  - go test -v $(go list ./... | grep -v /vendor/)
+
+notifications:
+  email: false

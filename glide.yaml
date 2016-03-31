@@ -1,0 +1,10 @@
+package: github.com/abulimov/db-checker
+import:
+- package: github.com/fractalcat/nagiosplugin
+- package: github.com/go-sql-driver/mysql
+- package: github.com/lib/pq
+- package: github.com/sergi/go-diff
+  subpackages:
+  - diffmatchpatch
+- package: gopkg.in/yaml.v2
+- package: github.com/DATA-DOG/go-sqlmock

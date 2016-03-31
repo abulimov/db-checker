@@ -20,25 +20,6 @@ func (r Row) String() string {
 	return ToTabString(r)
 }
 
-// StringInSlice checks if string is in slice
-func StringInSlice(needle string, list []string) bool {
-	for _, b := range list {
-		if b == needle {
-			return true
-		}
-	}
-	return false
-}
-
-// ToCSVString returns keys and values in CSV format
-func ToCSVString(keys, values []string) string {
-	var list []string
-	for pos, key := range keys {
-		list = append(list, fmt.Sprintf("%s: %s", key, values[pos]))
-	}
-	return strings.Join(list, ", ")
-}
-
 // ToTabString returns keys and values in CSV format
 func ToTabString(values []string) string {
 	var list []string
@@ -96,20 +77,6 @@ func FindCheckInCheckResults(needle Check, list []CheckResult) int {
 		}
 	}
 	return -1
-}
-
-// NewProblem is a problem description constructor
-func NewProblem(columns []string, fields []interface{}) string {
-	var result []string
-	for pos, t := range fields {
-		switch t := t.(type) {
-		default:
-			Error.Printf("unexpected type %T\n", t) // %T prints whatever type t has
-		case *[]byte:
-			result = append(result, fmt.Sprintf("%s: %s", columns[pos], string(*t)))
-		}
-	}
-	return strings.Join(result, ", ")
 }
 
 // NewRow is a row constructor

@@ -1,0 +1,20 @@
+hash: 091172322a91db4d4219f40952f581ec14ad6679735e6e7249d9809109a71b80
+updated: 2016-03-31T16:17:58.996282566+03:00
+imports:
+- name: github.com/DATA-DOG/go-sqlmock
+  version: 9958e5c69de03e97ec215b23f6fcae1f600c3fb6
+- name: github.com/fractalcat/nagiosplugin
+  version: fb8f18bacd884a35878d9173b906bb6ac0a98d61
+- name: github.com/go-sql-driver/mysql
+  version: 1421caf44f6464fd2ee8de694c7508ee13f92964
+- name: github.com/lib/pq
+  version: 3cd0097429be7d611bb644ef85b42bfb102ceea4
+  subpackages:
+  - oid
+- name: github.com/sergi/go-diff
+  version: ec7fdbb58eb3e300c8595ad5ac74a5aa50019cc7
+  subpackages:
+  - diffmatchpatch
+- name: gopkg.in/yaml.v2
+  version: a83829b6f1293c91addabc89d0571c246397bbf4
+devImports: []

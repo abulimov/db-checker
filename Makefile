@@ -18,7 +18,7 @@ build: get
 	go build $(GOFLAGS) $(REPO)
 
 test: get
-	@go test -v $(GOFLAGS) ./...
+	@go test -v $(GOFLAGS) `go list ./... | grep -v /vendor/`
 
 clean:
 	@go clean $(GOFLAGS) -i $(REPO)

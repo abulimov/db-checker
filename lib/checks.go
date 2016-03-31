@@ -108,7 +108,7 @@ func CheckQueryPresent(db *sql.DB, check Check) (*CheckResult, error) {
 	return &CheckResult{Check: check, Problems: results}, nil
 }
 
-// GetChecks scans filesistem under searchDir and returns list of checks
+// GetChecks scans filesystem under searchDir and returns list of checks
 func GetChecks(searchDir string) ([]*Check, error) {
 	var results []*Check
 
@@ -165,7 +165,7 @@ func runChecks(db *sql.DB, checks []*Check, concurrency int) ([]CheckResult, err
 	defer close(sem)
 	// iterating is less error-prone and helps DRY
 	for _, check := range checks {
-		// spawn gorutine
+		// spawn goroutine
 		go func(c *Check) {
 			var checker func(*sql.DB, Check) (*CheckResult, error)
 			// Try to get semaphore. If it is full, we'll block until some other goroutine will end
