@@ -1,18 +1,27 @@
 language: go
-
 go:
   - 1.5
   - 1.6
   - tip
-
 before_install:
   - export GO15VENDOREXPERIMENT=1
-
 install:
   - echo 'nop'
-
 script:
   - go test -v $(go list ./... | grep -v /vendor/)
-
 notifications:
   email: false
+before_deploy:
+  - make release
+deploy:
+  provider: releases
+  api_key:
+    secure: Wibzom3VE0oCX1ZRLPcgEPf+LT6WT8WjG1v+jF2Tn86ik/LURG5ZUlFzVdeePBU8lW08NOpObgfO5m0EybGwIhxuZqhzN6C6VNpm2xu/FsJofGLMrCHItJRkTB3HNiL8bWIvy/2ENHIARHA5UqBjS/KPq801hDLtCi6EguNwbOXoPwgoZDsaFIhXMa6fG/UmpARX2ONBYhf32LmYHrDlzUO2Mt2klhFIiB4gSAPqDPX+sosQoAT/fnbOnDBkwKc6K978WBFwqNqVxILImMF8HhXOnIQ1yqUqrieLPcgpAXsIVl6bNPNrnexCAilxXLafowqmVKxQLK0phsKT0sK2clWcitA4jRUZYo7+ayldIbAWBc6vJMzjpFKNa1JYEiG07B0vHkzVtiK/isD1GMimOFjWa65fQm13Ao61DOWdSKwVy7urnHNME4yd7cA4hOYXzOofqcOi3fD1224F7xcWSHMcmG9ltK5uHeGexee4uE5BKST3qukRktbYlglz9PxSEzqM0a2ouRQT1RLzaonokIiZYZnCwLWKIslj3G6Df4b0y4QBfvRS4cXbly+jaQrEQNiKRiCLK8+wH0Ov8g7rGElh5vt3xvK6ZAAeeGHw+RqLYtA2igkyt4DUH+AxE59021BkoVIWcEMIOKIro4pJsIUWoPDRucpAa3wCfVkWiTE=
+  file:
+    - release/db-checker.darwin-amd64.zip
+    - release/db-checker.linux-amd64.zip
+    - release/db-checker.linux-arm.zip
+  on:
+    repo: abulimov/db-checker
+    tags: true
+    go: 1.6

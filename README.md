@@ -9,6 +9,12 @@ For example, one can check if query returns data, or query does not return data.
 
 ## Installation
 
+Grab latest release on [releases page](https://github.com/abulimov/db-checker/releases),
+or build from source.
+
+### Building from source
+
+You need working Go compiler.
 Tested against Go 1.5+
 
 On Linux/OSX:
@@ -21,29 +27,6 @@ go get github.com/abulimov/db-checker
 
 Now you have *db-checker* binary.
 
-### Cross-platform build
-
-Compiling Linux binary from OSX:
-
-a) install go from homebrew with option `--with-cc-common`:
-```
-brew install go --with-cc-common
-```
-
-b) Set variables for `go build`:
-```
-GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build github.com/abulimov/db-checker
-```
-
-As a result, `db-checker` executable file will appear in current directory.
-
-All this can be accomplished with the Makefile:
-```
-export GOPATH=~/go && mkdir -p ~/go
-go get github.com/abulimov/db-checker
-cd $GOPATH/github.com/abulimov/db-checker && make linux
-```
-
 ## Checks
 
 Checks are specified as [YAML](http://www.yaml.org) files,
@@ -51,7 +34,7 @@ with only 3 mandatory fields:
 
 * query: any SQL query you can imagine
 * description: human-readable description of performed check
-* assert: type of check assertion, either *present* or *absent*
+* assert: type of check assertion, *present*, *absent*, *true* or *false*
 
 ### Check example
 

@@ -16,7 +16,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var version = "0.2.2"
+var version = "0.3.0"
 
 // set up cli vars
 var argDBType = flag.String("dbtype", "postgres", "Type of DB, can be 'postgres' or 'mysql'")

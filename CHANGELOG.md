@@ -1,3 +1,7 @@
+## v0.3.0 [2016-04-14]
+
+- Added true/false assertions
+
 ## v0.2.2 [2016-03-23]
 
 - Simplified project structure
