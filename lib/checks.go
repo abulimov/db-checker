@@ -20,6 +20,9 @@ type Check struct {
 	Assert      string `yaml:"assert"`
 }
 
+// CheckFunc is a function we use for checks
+type CheckFunc func(*sql.DB, Check) (*CheckResult, error)
+
 // ReadCheck reads check from io.Reader
 func ReadCheck(f io.Reader) (*Check, error) {
 	b, err := ioutil.ReadAll(f)
@@ -108,6 +111,30 @@ func CheckQueryPresent(db *sql.DB, check Check) (*CheckResult, error) {
 	return &CheckResult{Check: check, Problems: results}, nil
 }
 
+// CheckQueryBool is a checker function that checks boolean output
+func CheckQueryBool(db *sql.DB, check Check, waitFor bool) (*CheckResult, error) {
+	var results []Row
+	var output bool
+	err := db.QueryRow(check.Query).Scan(&output)
+	switch {
+	case err == sql.ErrNoRows:
+		results = append(results, Row{"No rows for boolean check"})
+		return &CheckResult{Check: check, Problems: results}, nil
+	case err != nil:
+		return nil, err
+	default:
+		if output != waitFor {
+			results = append(
+				results,
+				Row{
+					fmt.Sprintf("Expected %v, got %v", waitFor, output),
+				},
+			)
+		}
+		return &CheckResult{Check: check, Problems: results}, nil
+	}
+}
+
 // GetChecks scans filesystem under searchDir and returns list of checks
 func GetChecks(searchDir string) ([]*Check, error) {
 	var results []*Check
@@ -150,6 +177,25 @@ func RunChecks(dbType, dbConnString string, checks []*Check, concurrency int) ([
 	return runChecks(db, checks, concurrency)
 }
 
+func getCheckFunc(c *Check) CheckFunc {
+	switch c.Assert {
+	case "absent":
+		return CheckQueryAbsent
+	case "present":
+		return CheckQueryPresent
+	case "true":
+		return func(db *sql.DB, check Check) (*CheckResult, error) {
+			return CheckQueryBool(db, check, true)
+		}
+	case "false":
+		return func(db *sql.DB, check Check) (*CheckResult, error) {
+			return CheckQueryBool(db, check, false)
+		}
+	default:
+		return nil
+	}
+}
+
 // runChecks runs all checks, uses db object
 func runChecks(db *sql.DB, checks []*Check, concurrency int) ([]CheckResult, error) {
 	var results []CheckResult
@@ -167,17 +213,13 @@ func runChecks(db *sql.DB, checks []*Check, concurrency int) ([]CheckResult, err
 	for _, check := range checks {
 		// spawn goroutine
 		go func(c *Check) {
-			var checker func(*sql.DB, Check) (*CheckResult, error)
+			var checker CheckFunc
 			// Try to get semaphore. If it is full, we'll block until some other goroutine will end
 			sem <- true
 			// defer releasing of semaphore
 			defer func() { <-sem }()
-			switch c.Assert {
-			case "absent":
-				checker = CheckQueryAbsent
-			case "present":
-				checker = CheckQueryPresent
-			default:
+			checker = getCheckFunc(c)
+			if checker == nil {
 				ch <- FailedCheck(c, fmt.Sprintf("Unknown check assertion %s", c.Assert))
 				return
 			}
@@ -193,7 +235,7 @@ func runChecks(db *sql.DB, checks []*Check, concurrency int) ([]CheckResult, err
 	}
 
 	// get the results
-	for _ = range checks {
+	for range checks {
 		cr := <-ch
 		results = append(results, *cr)
 	}

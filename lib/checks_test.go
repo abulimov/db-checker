@@ -298,3 +298,82 @@ func TestRunChecks(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckQueryBool(t *testing.T) {
+	// open database stub
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("An error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	check := Check{
+		Description: "some_table count more than 5",
+		Query:       "SELECT (count(*) > 5) as status FROM some_table",
+		Assert:      "true",
+	}
+
+	columns := []string{"status"}
+	// match query it with regexp
+	mock.ExpectQuery(`SELECT.+`).
+		WillReturnRows(sqlmock.NewRows(columns).FromCSVString("t"))
+
+	result, err := CheckQueryBool(db, check, true)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %s instead", err)
+	}
+	gotResult := result
+	// we make sure that all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+
+	if result.HasProblems() {
+		t.Error("Expected result to have no problems")
+	}
+
+	expectedLen := 0
+	gotLen := len(gotResult.Problems)
+	if gotLen != expectedLen {
+		t.Errorf("Expected len of problems %v, got %v", expectedLen, gotLen)
+	}
+}
+
+func TestCheckQueryBoolEmpty(t *testing.T) {
+	// open database stub
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("An error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	check := Check{
+		Description: "some_table count more than 5",
+		Query:       "SELECT (count(*) > 5) as status FROM some_table",
+		Assert:      "true",
+	}
+	// match query it with regexp
+	columns := []string{"status"}
+	mock.ExpectQuery(`SELECT.+`).
+		WillReturnRows(sqlmock.NewRows(columns))
+
+	result, err := CheckQueryBool(db, check, false)
+	if err != nil {
+		t.Fatalf("Expected no error, but got %s instead", err)
+	}
+	expectedResult := CheckResult{
+		Check: check,
+		Problems: []Row{
+			{"No rows for boolean check"},
+		},
+	}
+
+	// we make sure that all expectations were met
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expections: %s", err)
+	}
+
+	if !eqResult(*result, expectedResult) {
+		t.Errorf("Expected result to have expected problems %v, got %v", *result, expectedResult)
+	}
+}
